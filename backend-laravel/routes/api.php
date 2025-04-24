@@ -9,6 +9,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\LessonController;
 use App\Http\Controllers\AssignmentController;
+use App\Http\Controllers\GroupController;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,7 +28,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 // Public routes
 Route::post('/users/login', [LoginController::class, 'login']);
-Route::post('/users/register', [RegisterController::class, 'register']);
+Route::post('/register', [RegisterController::class, 'register']);
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
@@ -42,4 +43,10 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Assignments
     Route::apiResource('courses.assignments', AssignmentController::class);
+
+    Route::apiResource('groups', GroupController::class);
+    
+    // مسارات إدارة الطلاب في المجموعات
+    Route::post('groups/{group}/students', [GroupController::class, 'addStudent']);
+    Route::delete('groups/{group}/students', [GroupController::class, 'removeStudent']);
 }); 

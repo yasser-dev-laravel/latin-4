@@ -32,11 +32,11 @@ const SidebarLayout: React.FC<SidebarLayoutProps> = ({
           p: 2,
         }}
       >
-        <SidebarLogout />
+        {/* <SidebarLogout isCollapsed={isCollapsed} />
         <SidebarCollapseToggle
           isCollapsed={isCollapsed}
           onToggle={onToggleCollapse}
-        />
+        /> */}
       </Box>
     </Box>
   );

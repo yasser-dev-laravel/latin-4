@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import {
   Table,
@@ -12,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import GroupsToolbar from "./GroupsToolbar";
 import GroupTableRow from "./GroupTableRow";
 import AddEditGroupDialog from "./AddEditGroupDialog";
+import { useGroups } from "@/hooks/useGroups";
 import { Student } from "../students/StudentsList";
 
 export interface Group {
@@ -34,78 +34,16 @@ export interface Group {
   studentsData?: Student[];
 }
 
-// Sample mock data
-const initialGroups: Group[] = [
-  {
-    id: "1",
-    name: "مجموعة إنجليزي متقدم",
-    code: "ENG-ADV-001",
-    courseId: "1",
-    courseName: "إنجليزي محادثة",
-    level: "متقدم",
-    instructorId: "1",
-    instructorName: "د. نهى عبد الرحمن",
-    roomId: "2", 
-    roomName: "قاعة 2",
-    startDate: new Date("2025-05-01"),
-    days: ["السبت", "الاثنين", "الأربعاء"],
-    startTime: "18:00",
-    endDate: new Date("2025-06-15"),
-    status: "active",
-    students: 12,
-    studentsData: [
-      {
-        id: "1",
-        code: "STD-001",
-        name: "أحمد محمد علي",
-        email: "ahmed@example.com",
-        phone: "01012345678",
-        gender: "male",
-        status: "active",
-        registrationDate: "2023-01-15",
-        groups: [{ id: "1", name: "مجموعة إنجليزي متقدم" }],
-      },
-    ],
-  },
-  {
-    id: "2",
-    name: "مجموعة حاسب آلي مبتدئ",
-    code: "COMP-BEG-002",
-    courseId: "2",
-    courseName: "أساسيات الحاسب",
-    level: "مبتدئ",
-    instructorId: "2",
-    instructorName: "أ. سامي السيد",
-    roomId: "1",
-    roomName: "معمل 1",
-    startDate: new Date("2025-05-15"),
-    days: ["الأحد", "الثلاثاء"],
-    startTime: "16:00",
-    endDate: new Date("2025-07-01"),
-    status: "waiting",
-    students: 8,
-    studentsData: [
-      {
-        id: "3",
-        code: "STD-003",
-        name: "محمود خالد",
-        email: "mahmoud@example.com",
-        phone: "01234567890",
-        gender: "male",
-        status: "inactive",
-        registrationDate: "2023-03-05",
-        groups: [{ id: "2", name: "مجموعة حاسب آلي مبتدئ" }],
-      },
-    ],
-  },
-];
-
 const GroupsList = () => {
   const { toast } = useToast();
-  const [groups, setGroups] = useState<Group[]>(initialGroups);
+  const { groups, loading, error, refetch, createGroup, updateGroup, deleteGroup } = useGroups();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
 
   // Filter groups based on search query
   const filteredGroups = groups.filter(
@@ -126,34 +64,56 @@ const GroupsList = () => {
     setIsDialogOpen(true);
   };
 
-  const handleDeleteGroup = (groupId: string) => {
-    setGroups(groups.filter((group) => group.id !== groupId));
-    toast({
-      title: "تم حذف المجموعة",
-      description: "تم حذف المجموعة بنجاح",
-    });
-  };
-
-  const handleSaveGroup = (group: Group) => {
-    if (selectedGroup) {
-      // Edit existing group
-      setGroups(
-        groups.map((g) => (g.id === group.id ? group : g))
-      );
+  const handleDeleteGroup = async (groupId: string) => {
+    try {
+      await deleteGroup(parseInt(groupId));
       toast({
-        title: "تم تعديل المجموعة",
-        description: "تم تعديل المجموعة بنجاح",
+        title: "تم حذف المجموعة",
+        description: "تم حذف المجموعة بنجاح",
       });
-    } else {
-      // Add new group
-      setGroups([...groups, { ...group, id: Date.now().toString() }]);
+    } catch (error) {
       toast({
-        title: "تم إضافة المجموعة",
-        description: "تم إضافة المجموعة بنجاح",
+        title: "خطأ",
+        description: "فشل في حذف المجموعة",
+        variant: "destructive",
       });
     }
-    setIsDialogOpen(false);
   };
+
+  const handleSaveGroup = async (group: Group) => {
+    try {
+      if (selectedGroup) {
+        // Edit existing group
+        await updateGroup(parseInt(group.id), group);
+        toast({
+          title: "تم تعديل المجموعة",
+          description: "تم تعديل المجموعة بنجاح",
+        });
+      } else {
+        // Add new group
+        await createGroup(group);
+        toast({
+          title: "تم إضافة المجموعة",
+          description: "تم إضافة المجموعة بنجاح",
+        });
+      }
+      setIsDialogOpen(false);
+    } catch (error) {
+      toast({
+        title: "خطأ",
+        description: "فشل في حفظ المجموعة",
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (loading) {
+    return <div className="text-center py-4">جاري التحميل...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center text-red-500 py-4">{error}</div>;
+  }
 
   return (
     <div className="space-y-4">

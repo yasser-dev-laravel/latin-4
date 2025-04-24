@@ -12,18 +12,21 @@ interface User {
 interface Group {
   id: number;
   name: string;
-  description: string;
+  code: string;
   courseId: number;
-  teacherId: number;
-  isActive: boolean;
-  course: {
-    id: number;
-    name: string;
-  };
-  teacher: User;
-  students: User[];
-  createdAt: string;
-  updatedAt: string;
+  courseName: string;
+  level: string;
+  instructorId: number;
+  instructorName: string;
+  roomId: number;
+  roomName: string;
+  startDate: string;
+  days: string[];
+  startTime: string;
+  endDate: string;
+  status: "active" | "waiting" | "postponed" | "cancelled" | "finished";
+  students: number;
+  studentsData?: any[];
 }
 
 export const useGroups = () => {
@@ -32,17 +35,20 @@ export const useGroups = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchGroups = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+    if (loading) return;
+    
     try {
+      setLoading(true);
+      setError(null);
       const response = await apiClient.get('/groups');
       setGroups(response.data);
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to fetch groups');
+      setError(err.response?.data?.message || 'حدث خطأ أثناء جلب المجموعات');
+      console.error('API Error:', err.response?.data);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [loading]);
 
   const getGroupById = useCallback(async (id: number) => {
     setLoading(true);
@@ -51,7 +57,7 @@ export const useGroups = () => {
       const response = await apiClient.get(`/groups/${id}`);
       return response.data;
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to fetch group');
+      setError(err.response?.data?.message || 'فشل في جلب المجموعة');
       return null;
     } finally {
       setLoading(false);
@@ -66,8 +72,8 @@ export const useGroups = () => {
       setGroups(prev => [...prev, response.data]);
       return response.data;
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to create group');
-      return null;
+      setError(err.response?.data?.message || 'فشل في إنشاء المجموعة');
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -83,8 +89,8 @@ export const useGroups = () => {
       ));
       return response.data;
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to update group');
-      return null;
+      setError(err.response?.data?.message || 'فشل في تحديث المجموعة');
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -98,8 +104,8 @@ export const useGroups = () => {
       setGroups(prev => prev.filter(group => group.id !== id));
       return true;
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to delete group');
-      return false;
+      setError(err.response?.data?.message || 'فشل في حذف المجموعة');
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -115,8 +121,8 @@ export const useGroups = () => {
       ));
       return response.data;
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to add student to group');
-      return null;
+      setError(err.response?.data?.message || 'فشل في إضافة الطالب للمجموعة');
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -132,8 +138,8 @@ export const useGroups = () => {
       ));
       return response.data;
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to remove student from group');
-      return null;
+      setError(err.response?.data?.message || 'فشل في إزالة الطالب من المجموعة');
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -146,7 +152,7 @@ export const useGroups = () => {
       const response = await apiClient.get(`/groups/${groupId}/students`);
       return response.data;
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to fetch group students');
+      setError(err.response?.data?.message || 'فشل في جلب طلاب المجموعة');
       return null;
     } finally {
       setLoading(false);
@@ -161,7 +167,7 @@ export const useGroups = () => {
     groups,
     loading,
     error,
-    fetchGroups,
+    refetch: fetchGroups,
     getGroupById,
     createGroup,
     updateGroup,

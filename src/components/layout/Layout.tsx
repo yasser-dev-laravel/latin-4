@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
   AppBar,
   Box,
@@ -9,8 +9,9 @@ import {
   Toolbar,
   Typography,
   useTheme,
+  Button,
 } from "@mui/material";
-import { Menu as MenuIcon } from "@mui/icons-material";
+import { Menu as MenuIcon, Logout as LogoutIcon } from "@mui/icons-material";
 import { useAuth } from "../../contexts/AuthContext";
 import SidebarLayout from "./sidebar/layout";
 import { useMobile } from "@/hooks/use-mobile";
@@ -26,8 +27,16 @@ export default function Layout({ children }: LayoutProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const theme = useTheme();
   const navigate = useNavigate();
-  const { logout, user } = useAuth();
+  const location = useLocation();
+  const { logout, user, isAuthenticated } = useAuth();
   const { isMobileMenuOpen, setIsMobileMenuOpen } = useMobile();
+
+  // التحقق من حالة المصادقة
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate("/login", { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -38,10 +47,14 @@ export default function Layout({ children }: LayoutProps) {
     setIsCollapsed(!isCollapsed);
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login", { replace: true });
   };
+
+  if (!isAuthenticated || !user) {
+    return null;
+  }
 
   return (
     <Box sx={{ display: "flex", direction: "rtl" }}>
@@ -59,9 +72,16 @@ export default function Layout({ children }: LayoutProps) {
             أكاديمية اللغة اللاتينية
           </Typography>
           <Box sx={{ flexGrow: 1 }} />
-          <Typography variant="subtitle1">
+          <Typography variant="subtitle1" sx={{ mx: 2 }}>
             {user?.name || "مستخدم"}
           </Typography>
+          <Button
+            color="inherit"
+            onClick={handleLogout}
+            startIcon={<LogoutIcon />}
+          >
+            تسجيل الخروج
+          </Button>
           <IconButton
             color="inherit"
             aria-label="open drawer"

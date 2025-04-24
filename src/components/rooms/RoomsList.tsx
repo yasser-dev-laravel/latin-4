@@ -1,10 +1,7 @@
-
 import { useState } from "react";
 import { Plus, Building, Search, Edit, Trash } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-import { toast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 import { useBranches } from "@/contexts/BranchesContext";
-import RoomForm from "./RoomForm";
 
 const initialRooms = [
   { id: 1, number: "101", name: "قاعة المستقبل", type: "قاعة عامة", capacity: 30, location: "الدور الأول", branchId: 1 },
@@ -18,9 +15,7 @@ const RoomsList = () => {
   const [rooms, setRooms] = useState(initialRooms);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedBranchId, setSelectedBranchId] = useState<string>("");
-  const [showAddForm, setShowAddForm] = useState(false);
   const { branches } = useBranches();
-  const navigate = useNavigate();
 
   // filter rooms depending on search and branch
   const filteredRooms = rooms.filter(
@@ -42,11 +37,6 @@ const RoomsList = () => {
   const getBranchName = (branchId: number) => {
     const branch = branches.find((b) => b.id === branchId);
     return branch ? branch.name : "-";
-  };
-
-  const handleAddRoom = (room: any) => {
-    setRooms((prev) => [...prev, room]);
-    setShowAddForm(false);
   };
 
   return (

@@ -5,7 +5,7 @@ import apiClient from "../api/apiClient";
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   isAuthenticated: boolean;
 }
 
@@ -16,32 +16,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-      setIsAuthenticated(true);
-    }
+    const checkAuth = async () => {
+      const token = localStorage.getItem("token");
+      const storedUser = localStorage.getItem("user");
+
+      if (token && storedUser) {
+        try {
+          const response = await apiClient.get("/user");
+          const userData = response.data;
+          setUser(userData);
+          setIsAuthenticated(true);
+        } catch (error) {
+          console.error("Auth check failed:", error);
+          logout();
+        }
+      }
+    };
+
+    checkAuth();
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
       const response = await apiClient.post("/users/login", { email, password });
       const { user: userData, token } = response.data;
-      setUser(userData);
-      setIsAuthenticated(true);
+      
       localStorage.setItem("user", JSON.stringify(userData));
       localStorage.setItem("token", token);
+      
+      setUser(userData);
+      setIsAuthenticated(true);
+      
+      apiClient.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     } catch (error) {
       console.error("Login failed:", error);
       throw error;
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    setIsAuthenticated(false);
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
+  const logout = async () => {
+    try {
+      if (isAuthenticated) {
+        await apiClient.post("/users/logout");
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      setUser(null);
+      setIsAuthenticated(false);
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      delete apiClient.defaults.headers.common["Authorization"];
+    }
   };
 
   return (
