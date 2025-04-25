@@ -69,7 +69,7 @@ export default function Layout({ children }: LayoutProps) {
       >
         <Toolbar>
           <Typography variant="h6" noWrap component="div">
-            أكاديمية اللغة اللاتينية
+            أكاديمية المعهد اللاتيني
           </Typography>
           <Box sx={{ flexGrow: 1 }} />
           <Typography variant="subtitle1" sx={{ mx: 2 }}>
@@ -145,8 +145,9 @@ export default function Layout({ children }: LayoutProps) {
         sx={{
           flexGrow: 1,
           p: 3,
+          pr: 1,
           width: { sm: `calc(100% - ${drawerWidth}px)` },
-          mr: { sm: `${drawerWidth}px` },
+          // mr: { sm: `${drawerWidth}px` },
           mt: 8,
         }}
       >

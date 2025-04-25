@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Course } from "./CoursesList";
+import { Course } from "@/types/course";
 
 export function useCoursesSearch(courses: Course[]) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -17,8 +17,7 @@ export function useCoursesSearch(courses: Course[]) {
       const filtered = courses.filter(
         (course) =>
           course.name.toLowerCase().includes(query.toLowerCase()) ||
-          course.category.toLowerCase().includes(query.toLowerCase()) ||
-          course.description.toLowerCase().includes(query.toLowerCase())
+          (course.description && course.description.toLowerCase().includes(query.toLowerCase()))
       );
       setFilteredCourses(filtered);
     }

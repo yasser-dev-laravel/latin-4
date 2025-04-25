@@ -15,6 +15,11 @@ class CourseController extends Controller
     public function index()
     {
         try {
+            // إرجاع جميع الدورات مع العلاقات الضرورية فقط للواجهة
+            $courses = Course::with('levels')->get();
+            return response()->json($courses);
+
+            /* الكود الأصلي - معلق مؤقتاً للتشخيص
             $user = Auth::user();
             
             if ($user->role === 'teacher') {
@@ -31,6 +36,7 @@ class CourseController extends Controller
             }
             
             return response()->json($courses);
+            */
         } catch (\Exception $e) {
             return response()->json(['error' => 'فشل في جلب الدورات', 'details' => $e->getMessage()], 500);
         }
@@ -40,7 +46,8 @@ class CourseController extends Controller
     public function show($id)
     {
         try {
-            $course = Course::with(['levels', 'lessons', 'assignments', 'teacher'])->find($id);
+            // تبسيط استدعاء العلاقات للتوافق مع واجهة المستخدم
+            $course = Course::with('levels')->find($id);
             
             if (!$course) {
                 return response()->json(['error' => 'الدورة غير موجودة'], 404);
@@ -58,24 +65,22 @@ class CourseController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
-                'description' => 'required|string',
-                'price' => 'required|numeric|min:0',
-                'duration' => 'required|integer|min:1',
-                'category_id' => 'required|exists:categories,id',
-                'start_date' => 'required|date',
-                'end_date' => 'required|date|after:start_date',
-                'active' => 'boolean'
+                'description' => 'nullable|string',
+                'category_id' => 'nullable|integer',
+                'active' => 'boolean',
             ]);
 
             if ($validator->fails()) {
-                return response()->json(['errors' => $validator->errors()], 422);
+                return response()->json(['error' => 'بيانات غير صالحة', 'details' => $validator->errors()], 422);
             }
 
-            $courseData = $request->all();
-            $courseData['teacher_id'] = Auth::id();
-            $courseData['status'] = 'active';
+            $course = Course::create([
+                'name' => $request->name,
+                'description' => $request->description,
+                'category_id' => $request->category_id,
+                'active' => $request->active ?? true,
+            ]);
 
-            $course = Course::create($courseData);
             return response()->json($course, 201);
         } catch (\Exception $e) {
             return response()->json(['error' => 'فشل في إنشاء الدورة', 'details' => $e->getMessage()], 500);
@@ -86,30 +91,27 @@ class CourseController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            $course = Course::find($id);
+            $course = Course::findOrFail($id);
             
-            if (!$course) {
-                return response()->json(['error' => 'الدورة غير موجودة'], 404);
-            }
-
             $validator = Validator::make($request->all(), [
-                'name' => 'sometimes|string|max:255',
-                'description' => 'sometimes|string',
-                'price' => 'sometimes|numeric|min:0',
-                'duration' => 'sometimes|integer|min:1',
-                'category_id' => 'sometimes|exists:categories,id',
-                'start_date' => 'sometimes|date',
-                'end_date' => 'sometimes|date|after:start_date',
-                'status' => 'sometimes|in:active,inactive,completed',
-                'active' => 'boolean'
+                'name' => 'sometimes|required|string|max:255',
+                'description' => 'nullable|string',
+                'category_id' => 'nullable|integer',
+                'active' => 'boolean',
             ]);
 
             if ($validator->fails()) {
-                return response()->json(['errors' => $validator->errors()], 422);
+                return response()->json(['error' => 'بيانات غير صالحة', 'details' => $validator->errors()], 422);
             }
 
             $course->update($request->all());
+            
+            // أعد تحميل الكورس مع علاقة المستويات بعد التحديث
+            $course = Course::with('levels')->find($id);
+            
             return response()->json($course);
+        } catch (\ModelNotFoundException $e) {
+            return response()->json(['error' => 'الدورة غير موجودة'], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'فشل في تحديث الدورة', 'details' => $e->getMessage()], 500);
         }
@@ -119,14 +121,12 @@ class CourseController extends Controller
     public function destroy($id)
     {
         try {
-            $course = Course::find($id);
-            
-            if (!$course) {
-                return response()->json(['error' => 'الدورة غير موجودة'], 404);
-            }
-
+            $course = Course::findOrFail($id);
             $course->delete();
+            
             return response()->json(['message' => 'تم حذف الدورة بنجاح']);
+        } catch (\ModelNotFoundException $e) {
+            return response()->json(['error' => 'الدورة غير موجودة'], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'فشل في حذف الدورة', 'details' => $e->getMessage()], 500);
         }
@@ -136,28 +136,38 @@ class CourseController extends Controller
     public function addLevel(Request $request, $courseId)
     {
         try {
-            $course = Course::find($courseId);
+            $course = Course::findOrFail($courseId);
             
-            if (!$course) {
-                return response()->json(['error' => 'الدورة غير موجودة'], 404);
-            }
-
             $validator = Validator::make($request->all(), [
-                'level' => 'required|integer|min:1',
                 'name' => 'required|string|max:255',
                 'code' => 'required|string|max:50',
+                'level' => 'required|integer|min:1',
                 'lectures_count' => 'required|integer|min:1',
-                'lecture_duration' => 'required|numeric|min:0',
+                'lecture_duration' => 'required|integer|min:15',
                 'price' => 'required|numeric|min:0',
-                'is_active' => 'boolean'
+                'is_active' => 'boolean',
             ]);
 
             if ($validator->fails()) {
-                return response()->json(['errors' => $validator->errors()], 422);
+                return response()->json(['error' => 'بيانات غير صالحة', 'details' => $validator->errors()], 422);
             }
 
-            $level = $course->levels()->create($request->all());
+            $level = new CourseLevel([
+                'name' => $request->name,
+                'code' => $request->code,
+                'level' => $request->level,
+                'lectures_count' => $request->lectures_count,
+                'lecture_duration' => $request->lecture_duration,
+                'price' => $request->price,
+                'is_active' => $request->is_active ?? true,
+                'course_id' => $courseId,
+            ]);
+
+            $level->save();
+            
             return response()->json($level, 201);
+        } catch (\ModelNotFoundException $e) {
+            return response()->json(['error' => 'الدورة غير موجودة'], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'فشل في إضافة المستوى', 'details' => $e->getMessage()], 500);
         }
@@ -167,15 +177,59 @@ class CourseController extends Controller
     public function getLevels($courseId)
     {
         try {
-            $course = Course::with('levels')->find($courseId);
+            $course = Course::findOrFail($courseId);
+            $levels = $course->levels;
             
-            if (!$course) {
-                return response()->json(['error' => 'الدورة غير موجودة'], 404);
-            }
-            
-            return response()->json($course->levels);
+            return response()->json($levels);
+        } catch (\ModelNotFoundException $e) {
+            return response()->json(['error' => 'الدورة غير موجودة'], 404);
         } catch (\Exception $e) {
             return response()->json(['error' => 'فشل في جلب مستويات الدورة', 'details' => $e->getMessage()], 500);
+        }
+    }
+
+    // تحديث مستوى
+    public function updateLevel(Request $request, $levelId)
+    {
+        try {
+            $level = CourseLevel::findOrFail($levelId);
+            
+            $validator = Validator::make($request->all(), [
+                'name' => 'sometimes|required|string|max:255',
+                'code' => 'sometimes|required|string|max:50',
+                'level' => 'sometimes|required|integer|min:1',
+                'lectures_count' => 'sometimes|required|integer|min:1',
+                'lecture_duration' => 'sometimes|required|integer|min:15',
+                'price' => 'sometimes|required|numeric|min:0',
+                'is_active' => 'boolean',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json(['error' => 'بيانات غير صالحة', 'details' => $validator->errors()], 422);
+            }
+
+            $level->update($request->all());
+            
+            return response()->json($level);
+        } catch (\ModelNotFoundException $e) {
+            return response()->json(['error' => 'المستوى غير موجود'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'فشل في تحديث المستوى', 'details' => $e->getMessage()], 500);
+        }
+    }
+
+    // حذف مستوى
+    public function deleteLevel($levelId)
+    {
+        try {
+            $level = CourseLevel::findOrFail($levelId);
+            $level->delete();
+            
+            return response()->json(['message' => 'تم حذف المستوى بنجاح']);
+        } catch (\ModelNotFoundException $e) {
+            return response()->json(['error' => 'المستوى غير موجود'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'فشل في حذف المستوى', 'details' => $e->getMessage()], 500);
         }
     }
 }

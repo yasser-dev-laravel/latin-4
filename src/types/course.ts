@@ -1,23 +1,24 @@
 export interface CourseLevel {
   id: number;
-  level: number;
   name: string;
   code: string;
-  lecturesCount: number;
-  lectureDuration: number;
+  level: number;
+  lectures_count: number;
+  lecture_duration: number;
   price: number;
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  is_active: boolean;
+  course_id: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface Course {
   id: number;
   name: string;
   description: string;
-  categoryId: number;
+  category_id?: number;
   active: boolean;
   levels: CourseLevel[];
-  createdAt: Date;
-  updatedAt: Date;
-} 
+  created_at?: string;
+  updated_at?: string;
+}

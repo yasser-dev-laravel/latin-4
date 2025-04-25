@@ -1,22 +1,11 @@
 import CoursesListUI from "./CoursesListUI";
 import { useCoursesSearch } from "./useCoursesSearch";
-
-export interface Course {
-  id: string;
-  name: string;
-  duration: number;
-  price: number;
-  description: string;
-  categoryId: string;
-  category: string;
-  active: boolean;
-  levels: import("./CourseLevelsList").CourseLevel[];
-  createdAt?: string;
-  updatedAt?: string;
-}
+import { Course } from "@/types/course";
 
 // Export this hook for reuse in UI
 export { useCoursesSearch };
+// Re-export Course type for backward compatibility
+export type { Course };
 
 const CoursesList = () => {
   return <CoursesListUI />;
