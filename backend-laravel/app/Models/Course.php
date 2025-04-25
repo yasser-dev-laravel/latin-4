@@ -17,20 +17,35 @@ class Course extends Model
         'description',
         'price',
         'duration',
+        'category_id',
         'teacher_id',
         'start_date',
         'end_date',
         'status',
+        'active'
     ];
 
     protected $casts = [
+        'price' => 'float',
+        'duration' => 'integer',
         'start_date' => 'datetime',
         'end_date' => 'datetime',
+        'active' => 'boolean'
     ];
 
     public function teacher(): BelongsTo
     {
         return $this->belongsTo(User::class, 'teacher_id');
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function levels(): HasMany
+    {
+        return $this->hasMany(Level::class);
     }
 
     public function lessons(): HasMany
@@ -43,14 +58,16 @@ class Course extends Model
         return $this->hasMany(Assignment::class);
     }
 
-    public function students(): HasMany
+    public function students(): BelongsToMany
     {
-        return $this->hasMany(CourseStudent::class);
+        return $this->belongsToMany(User::class, 'course_students', 'course_id', 'student_id')
+            ->withPivot('enrollment_date', 'status', 'grade', 'notes')
+            ->withTimestamps();
     }
 
-    public function levels(): BelongsToMany
+    public function enrollments(): HasMany
     {
-        return $this->belongsToMany(Level::class);
+        return $this->hasMany(CourseStudent::class);
     }
 
     public function lectures(): HasMany

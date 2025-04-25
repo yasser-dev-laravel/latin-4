@@ -1,4 +1,3 @@
-import { useCourses } from "@/contexts/CoursesContext";
 import CoursesListUI from "./CoursesListUI";
 import { useCoursesSearch } from "./useCoursesSearch";
 

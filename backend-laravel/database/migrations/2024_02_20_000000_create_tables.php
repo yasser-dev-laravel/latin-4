@@ -52,8 +52,9 @@ return new class extends Migration
         Schema::create('levels', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('code');
             $table->text('description')->nullable();
+            $table->foreignId('course_id')->constrained()->cascadeOnDelete();
+            $table->integer('order');
             $table->timestamps();
         });
 

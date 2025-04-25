@@ -2,11 +2,9 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\Auth\RegisterController;
-use App\Http\Controllers\Auth\LogoutController;
+use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\CourseController;
+use App\Http\Controllers\API\CourseController;
 use App\Http\Controllers\LessonController;
 use App\Http\Controllers\AssignmentController;
 use App\Http\Controllers\GroupController;
@@ -27,16 +25,25 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 // Public routes
-Route::post('/users/login', [LoginController::class, 'login']);
-Route::post('/register', [RegisterController::class, 'register']);
+Route::post('/auth/login', [AuthController::class, 'login']);
+Route::post('/auth/register', [AuthController::class, 'register']);
+Route::post('/auth/refresh', [AuthController::class, 'refreshToken']);
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [UserController::class, 'current']);
-    Route::post('/users/logout', [LogoutController::class, 'logout']);
-
+    Route::post('/auth/logout', [AuthController::class, 'logout']);
+    
     // Courses
-    Route::apiResource('courses', CourseController::class);
+    Route::get('/courses', [CourseController::class, 'index']);
+    Route::post('/courses', [CourseController::class, 'store']);
+    Route::get('/courses/{id}', [CourseController::class, 'show']);
+    Route::put('/courses/{id}', [CourseController::class, 'update']);
+    Route::delete('/courses/{id}', [CourseController::class, 'destroy']);
+    
+    // Course Levels
+    Route::get('/courses/{courseId}/levels', [CourseController::class, 'getLevels']);
+    Route::post('/courses/{courseId}/levels', [CourseController::class, 'addLevel']);
     
     // Lessons
     Route::apiResource('courses.lessons', LessonController::class);
@@ -44,6 +51,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Assignments
     Route::apiResource('courses.assignments', AssignmentController::class);
 
+    // Groups
     Route::apiResource('groups', GroupController::class);
     
     // مسارات إدارة الطلاب في المجموعات

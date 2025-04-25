@@ -3,7 +3,7 @@ import { Plus, Building, Search, Edit, Trash } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
-import { useBranches } from "@/contexts/BranchesContext";
+import { useBranches } from "../../contexts/BranchesContext";
 
 const BranchesList = () => {
   const [searchQuery, setSearchQuery] = useState("");

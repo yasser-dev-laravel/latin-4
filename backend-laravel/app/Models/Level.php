@@ -2,15 +2,18 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Level extends Model
 {
-    protected $fillable = ['name', 'code', 'description'];
+    use HasFactory;
 
-    public function courses()
+    protected $fillable = ['name', 'description', 'course_id', 'order'];
+
+    public function course()
     {
-        return $this->belongsToMany(Course::class);
+        return $this->belongsTo(Course::class);
     }
 
     public function lectures()

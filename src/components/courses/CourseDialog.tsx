@@ -1,14 +1,25 @@
 import React, { useEffect, useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { useAddEditCourseForm } from '@/contexts/AddEditCourseFormContext';
+import { useAddEditCourseForm } from './useAddEditCourseForm';
+import { Course } from './CoursesList';
 import { CourseLevelsList } from '@/components/CourseLevelsList';
 
-const CourseDialog = ({ open, onClose, course }) => {
+interface CourseDialogProps {
+  open: boolean;
+  onClose: (data?: any) => void;
+  course?: Course;
+}
+
+const CourseDialog = ({ open, onClose, course }: CourseDialogProps) => {
   const { form, courseLevels, updateLevels, setCourseLevels, handleAddLevel } = useAddEditCourseForm();
+
+  const onSubmit = (data: any) => {
+    onClose(data);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>

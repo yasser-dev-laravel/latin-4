@@ -9,6 +9,8 @@ import {
   Typography,
   Paper,
   Alert,
+  FormControlLabel,
+  Checkbox,
 } from "@mui/material";
 
 const Login: React.FC = () => {
@@ -18,6 +20,7 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,11 +28,12 @@ const Login: React.FC = () => {
     setIsLoading(true);
 
     try {
-      await login(email, password);
+      await login(email, password, rememberMe);
       navigate("/");
-    } catch (err) {
+    } catch (err: any) {
       console.error('Login error:', err);
-      setError("خطأ في البريد الإلكتروني أو كلمة المرور");
+      // استخدام رسالة الخطأ من الخادم إذا كانت متوفرة
+      setError(err.message || "خطأ في البريد الإلكتروني أو كلمة المرور");
     } finally {
       setIsLoading(false);
     }
@@ -93,6 +97,18 @@ const Login: React.FC = () => {
               onChange={(e) => setPassword(e.target.value)}
               dir="rtl"
               disabled={isLoading}
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  value="remember"
+                  color="primary"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                />
+              }
+              label="تذكرني"
+              sx={{ mt: 1 }}
             />
             <Button
               type="submit"
