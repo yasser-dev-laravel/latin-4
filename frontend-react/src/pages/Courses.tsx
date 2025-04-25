@@ -1,15 +1,23 @@
+
 import React, { useEffect, useState } from "react";
 import { useCourses } from "../hooks/useCourses";
 import { Course } from "../types/course";
 import { useAuth } from "../contexts/AuthContext";
 import { Plus, BookOpen, Search, Edit, Trash } from "lucide-react";
+import AddEditCourseDialog from "../components/courses/AddEditCourseDialog";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const Courses: React.FC = () => {
-  const { courses, loading, error, fetchCourses } = useCourses();
+  const { courses, loading, error, fetchCourses, createCourse, updateCourse, deleteCourse } = useCourses();
   const { user } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLevelFilter, setSelectedLevelFilter] = useState<string>("");
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchCourses();
@@ -17,18 +25,74 @@ const Courses: React.FC = () => {
 
   const handleAddCourse = () => {
     setSelectedCourse(null);
-    // TODO: فتح نافذة إضافة دورة جديدة
+    setIsAddDialogOpen(true);
   };
 
   const handleEditCourse = (course: any) => {
     setSelectedCourse(course as Course);
-    // TODO: فتح نافذة تعديل الدورة
+    setIsEditDialogOpen(true);
   };
 
   const handleDeleteCourse = async (courseId: number) => {
     if (window.confirm("هل أنت متأكد من حذف هذه الدورة؟")) {
-      // TODO: تنفيذ عملية الحذف
-      console.log("حذف الدورة رقم:", courseId);
+      try {
+        await deleteCourse(courseId);
+        toast({
+          title: "تم الحذف بنجاح",
+          description: "تم حذف الدورة بنجاح",
+        });
+      } catch (error) {
+        console.error("Error deleting course:", error);
+        toast({
+          title: "خطأ",
+          description: "حدث خطأ أثناء حذف الدورة",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
+  const handleViewDetails = (courseId: number) => {
+    navigate(`/courses/${courseId}`);
+  };
+
+  const handleSaveNewCourse = async (courseData: any) => {
+    try {
+      await createCourse(courseData);
+      setIsAddDialogOpen(false);
+      toast({
+        title: "تم الإضافة بنجاح",
+        description: "تم إضافة الدورة الجديدة بنجاح",
+      });
+      fetchCourses(); // تحديث قائمة الدورات
+    } catch (error) {
+      console.error("Error creating course:", error);
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء إضافة الدورة",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSaveEditCourse = async (courseData: any) => {
+    if (!selectedCourse) return;
+    
+    try {
+      await updateCourse(selectedCourse.id, courseData);
+      setIsEditDialogOpen(false);
+      toast({
+        title: "تم التعديل بنجاح",
+        description: "تم تعديل الدورة بنجاح",
+      });
+      fetchCourses(); // تحديث قائمة الدورات
+    } catch (error) {
+      console.error("Error updating course:", error);
+      toast({
+        title: "خطأ",
+        description: "حدث خطأ أثناء تعديل الدورة",
+        variant: "destructive",
+      });
     }
   };
 
@@ -167,7 +231,10 @@ const Courses: React.FC = () => {
                           </button>
                         </>
                       )}
-                      <button className="text-sm text-primary hover:underline">
+                      <button 
+                        className="text-sm text-primary hover:underline"
+                        onClick={() => handleViewDetails(course.id)}
+                      >
                         عرض التفاصيل
                       </button>
                     </div>
@@ -186,6 +253,25 @@ const Courses: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* إضافة دورة جديدة */}
+      <AddEditCourseDialog
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+        onSave={handleSaveNewCourse}
+        isEditing={false}
+      />
+
+      {/* تعديل دورة */}
+      {selectedCourse && (
+        <AddEditCourseDialog
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          onSave={handleSaveEditCourse}
+          course={selectedCourse}
+          isEditing={true}
+        />
+      )}
     </div>
   );
 };

@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import React from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useAddEditCourseForm } from './useAddEditCourseForm';
-import { Course } from './CoursesList';
-import { CourseLevelsList } from '@/components/CourseLevelsList';
+import type { Course } from './CoursesList';
+import CourseLevelsList from '@/components/courses/CourseLevelsList';
 
 interface CourseDialogProps {
   open: boolean;
@@ -63,8 +63,10 @@ const CourseDialog = ({ open, onClose, course }: CourseDialogProps) => {
                 </Button>
               </div>
               <CourseLevelsList
+                courseId={course?.id?.toString() || ''}
+                courseName={form.getValues('name')}
                 levels={courseLevels}
-                onUpdate={updateLevels}
+                onLevelsChange={updateLevels}
               />
             </div>
             <DialogFooter>

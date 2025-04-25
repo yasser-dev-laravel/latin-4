@@ -3,11 +3,11 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AuthController;
-use App\Http\Controllers\UserController;
+use App\Http\Controllers\API\UserController;
 use App\Http\Controllers\API\CourseController;
-use App\Http\Controllers\LessonController;
-use App\Http\Controllers\AssignmentController;
-use App\Http\Controllers\GroupController;
+use App\Http\Controllers\API\LessonController;
+use App\Http\Controllers\API\AssignmentController;
+use App\Http\Controllers\API\GroupController;
 
 /*
 |--------------------------------------------------------------------------

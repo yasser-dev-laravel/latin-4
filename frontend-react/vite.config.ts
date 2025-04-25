@@ -10,6 +10,13 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        additionalData: `@import "./src/index.css";`
+      }
+    }
+  },
   server: {
     port: 5173,
     host: true,

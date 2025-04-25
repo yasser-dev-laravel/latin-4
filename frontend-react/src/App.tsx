@@ -1,3 +1,4 @@
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { ThemeProvider, createTheme } from "@mui/material";
 import { CssBaseline } from "@mui/material";
@@ -9,6 +10,7 @@ import Login from "./pages/Login";
 import Index from "./pages/Index";
 import Layout from "./components/layout/Layout";
 import Courses from "./pages/Courses";
+import CourseDetails from "./pages/CourseDetails";
 import Students from "./pages/Students";
 import Groups from "./pages/Groups";
 import Instructors from "./pages/Instructors";
@@ -100,6 +102,14 @@ function App() {
                   element={
                     <PrivateRoute>
                       <Courses />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/courses/:id"
+                  element={
+                    <PrivateRoute>
+                      <CourseDetails />
                     </PrivateRoute>
                   }
                 />

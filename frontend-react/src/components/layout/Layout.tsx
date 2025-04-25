@@ -148,6 +148,8 @@ export default function Layout({ children }: LayoutProps) {
           pr: 1,
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           // mr: { sm: `${drawerWidth}px` },
+          mr: 2,
+
           mt: 8,
         }}
       >
